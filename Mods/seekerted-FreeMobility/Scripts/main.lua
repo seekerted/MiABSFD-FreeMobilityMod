@@ -4,14 +4,80 @@ Utils.Log("Starting Free Mobility Mod by Ted the Seeker")
 Utils.Log(string.format("Version %s", Utils.ModVer))
 Utils.Log(_VERSION)
 
+-- Right now the jump mobility is to just have a very high leap with no limits. However this is a bit inconvenient.
+-- TODO: Turn into infinite jump instead.
+local function MakeJumpsFaster(MIACharacterMovementComponent)
+	MIACharacterMovementComponent.JumpZVelocity = 1200
+end
+
+local function MakeJumpsLimitless(BP_Player_C)
+	BP_Player_C.JumpMaxHoldTime = 1000
+end
+
 local function DisableFallDamage(BP_Player_C)
 	BP_Player_C.FallDamageScale = 0
+end
+
+-- Doesn't totally disable, but simply removes the delay of stamina recovery. So in-game the stamina bar instantly
+-- refills itself.
+local function DisableStaminaDecrease(MIAPlayerStaminaParamSet)
+	MIAPlayerStaminaParamSet.RechargeDelayTime = 0
+end
+
+local function DisableHungerDecrease(MIACharaStatusSetting)
+	local SatietySubtractions = MIACharaStatusSetting.SatietySubtractions
+
+	-- SatietySubtractions is an array containing how much hunger is decreased depending on action. Simply set all of
+	-- them to 0. Not sure how Value and BaseValue are related, but setting them both to 0 does the trick.
+	SatietySubtractions:ForEach(function(_, elem)
+		elem:get().Value = 0
+		elem:get().BaseValue = 0
+	end)
+end
+
+local function DisableCurseEffect(MIACharaStatusSetting)
+	local RisingLoadSettings = MIACharaStatusSetting.RisingLoadSettings
+
+	-- Assumption: RisingLoadSettings is a 5-element array containing various values for each layer?
+	-- Setting all RisingLoadValues to 0 seem to do the trick.
+	RisingLoadSettings:ForEach(function(_, elem)
+		elem:get().RisingLoadValue = 0
+	end)
+end
+
+-- Get the right objects to manipulate upon Player load.
+local function BP_Player_C__OnLoaded_3EA1(Param_BP_Player_C)
+	local BP_Player_C = Param_BP_Player_C:get()
+
+	DisableFallDamage(BP_Player_C)
+	MakeJumpsLimitless(BP_Player_C)
+
+	local MIACharacterMovementComponent = BP_Player_C.CharacterMovement
+	if MIACharacterMovementComponent:IsValid() then
+		MakeJumpsFaster(MIACharacterMovementComponent)
+	end
+
+	local MIACharacterStatus = BP_Player_C.StatusManager
+	if MIACharacterStatus:IsValid() then
+		local MIACharaStatusSetting = MIACharacterStatus.StatusInfo
+
+		if MIACharaStatusSetting:IsValid() then
+			DisableCurseEffect(MIACharaStatusSetting)
+			DisableHungerDecrease(MIACharaStatusSetting)
+		end
+	end
+
+	local MIAPlayerStaminaParamSet = BP_Player_C.StaminaParamSet
+	if MIAPlayerStaminaParamSet:IsValid() then
+		DisableStaminaDecrease(MIAPlayerStaminaParamSet)
+	end
 end
 
 -- Hook into BP_Player_C (hot-reload friendly)
 local function HookBP_Player_C(New_BP_Player_C)
 	if New_BP_Player_C:IsValid() then
-		DisableFallDamage(New_BP_Player_C)
+		Utils.RegisterHookOnce("/Game/MadeInAbyss/Core/Characters/Player/BP_Player.BP_Player_C:OnLoaded_3EA1D4484C94D6D6E39F31AD554C4A7A",
+				BP_Player_C__OnLoaded_3EA1)
 	else
 		NotifyOnNewObject("/Script/MadeInAbyss.MIAPlayerBase", function(New_MIAPlayerBase)
 			if New_MIAPlayerBase:IsValid() and "PersistentLevel" == New_MIAPlayerBase:GetOuter():GetFName():ToString() then
