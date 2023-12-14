@@ -57,16 +57,6 @@ local function BP_Player_C__OnLoaded_3EA1(Param_BP_Player_C)
 		MakeJumpsFaster(MIACharacterMovementComponent)
 	end
 
-	local MIACharacterStatus = BP_Player_C.StatusManager
-	if MIACharacterStatus:IsValid() then
-		local MIACharaStatusSetting = MIACharacterStatus.StatusInfo
-
-		if MIACharaStatusSetting:IsValid() then
-			DisableCurseEffect(MIACharaStatusSetting)
-			DisableHungerDecrease(MIACharaStatusSetting)
-		end
-	end
-
 	local MIAPlayerStaminaParamSet = BP_Player_C.StaminaParamSet
 	if MIAPlayerStaminaParamSet:IsValid() then
 		DisableStaminaDecrease(MIAPlayerStaminaParamSet)
@@ -87,3 +77,20 @@ local function HookBP_Player_C(New_BP_Player_C)
 	end
 end
 HookBP_Player_C(FindObject("BP_Player_C", "PersistentLevel"))
+
+-- Hook into BP_MIAGameInstance_C instance (hot-reload friendly)
+local function HookMIAGameInstance(New_MIAGameInstance)
+	if New_MIAGameInstance:IsValid() then
+		-- MIAGameInstance has been found
+
+		local MIACharaStatusSetting = FindObject("MIACharaStatusSetting", "BP_CharaStatusSetting")
+
+		if MIACharaStatusSetting:IsValid() then
+			DisableCurseEffect(MIACharaStatusSetting)
+			DisableHungerDecrease(MIACharaStatusSetting)
+		end
+	else
+		NotifyOnNewObject("/Script/MadeInAbyss.MIAGameInstance", HookMIAGameInstance)
+	end
+end
+HookMIAGameInstance(FindFirstOf("MIAGameInstance"))

@@ -4,7 +4,7 @@ local RegisteredHooks = {}
 
 Utils.ModName = "FreeMobility"
 Utils.ModAuthor = "seekerted"
-Utils.ModVer = "0.1.0"
+Utils.ModVer = "0.1.1"
 
 function Utils.Log(Msg)
 	print(string.format("[%s-%s] %s\n", Utils.ModAuthor, Utils.ModName, Msg))
