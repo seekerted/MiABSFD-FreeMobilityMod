@@ -8,20 +8,28 @@ Utils.Log(_VERSION)
 -- TODO: Turn into infinite jump instead.
 local function MakeJumpsFaster(MIACharacterMovementComponent)
 	MIACharacterMovementComponent.JumpZVelocity = 1200
+
+	Utils.Log("Jump velocity made faster.")
 end
 
 local function MakeJumpsLimitless(BP_Player_C)
 	BP_Player_C.JumpMaxHoldTime = 1000
+
+	Utils.Log("Jump height made limitless.")
 end
 
 local function DisableFallDamage(BP_Player_C)
 	BP_Player_C.FallDamageScale = 0
+
+	Utils.Log("Disabled fall damage.")
 end
 
 -- Doesn't totally disable, but simply removes the delay of stamina recovery. So in-game the stamina bar instantly
 -- refills itself.
 local function DisableStaminaDecrease(MIAPlayerStaminaParamSet)
 	MIAPlayerStaminaParamSet.RechargeDelayTime = 0
+
+	Utils.Log("Disabled stamina decrease.")
 end
 
 local function DisableHungerDecrease(MIACharaStatusSetting)
@@ -33,6 +41,8 @@ local function DisableHungerDecrease(MIACharaStatusSetting)
 		elem:get().Value = 0
 		elem:get().BaseValue = 0
 	end)
+
+	Utils.Log("Disabled hunger decrease.")
 end
 
 local function DisableCurseEffect(MIACharaStatusSetting)
@@ -43,6 +53,8 @@ local function DisableCurseEffect(MIACharaStatusSetting)
 	RisingLoadSettings:ForEach(function(_, elem)
 		elem:get().RisingLoadValue = 0
 	end)
+
+	Utils.Log("Disabled the Abyss Curse.")
 end
 
 -- Get the right objects to manipulate upon Player load.
