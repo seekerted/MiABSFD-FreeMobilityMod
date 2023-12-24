@@ -65,7 +65,7 @@ end
 -- Player's states prevent infinite jumping by blocking GA_Player_JumpStart_C from starting when the player currently
 -- has the abilities of GA_Player_JumpStart_C or GA_Player_JumpLoop_C. This adds "State.Jumping.Start" to their list of
 -- tags to exclude from the block, allowing it to start.
-local function MakeJumpsInfinite(BP_Player_C)
+local function UnblockJumpStart()
 	local GA_Player_JumpStart_C = StaticFindObject("/Game/MadeInAbyss/Core/Abilities/GA_Player_JumpStart.Default__GA_Player_JumpStart_C")
 	if not GA_Player_JumpStart_C:IsValid() then
 		Utils.Log("GA_Player_JumpStart_C is not found.")
@@ -82,6 +82,10 @@ local function MakeJumpsInfinite(BP_Player_C)
 
 	AddOnGameplayTagContainer(GA_Player_JumpLoop_C.ExcludeBlockAbilitiesWithTag, "State.Jumping.Start")
 
+	Utils.Log("Unblocked jump start.")
+end
+
+local function MakeJumpsInfinite(BP_Player_C)
 	BP_Player_C.JumpMaxCount = 1337
 	BP_Player_C.JumpMaxHoldTime = 100
 
@@ -178,6 +182,8 @@ local function HookMIAGameInstance(New_MIAGameInstance)
 		if MIAPlayerStaminaParamSet:IsValid() then
 			DisableStaminaDecrease(MIAPlayerStaminaParamSet)
 		end
+
+		UnblockJumpStart()
 	else
 		NotifyOnNewObject("/Script/MadeInAbyss.MIAGameInstance", HookMIAGameInstance)
 	end

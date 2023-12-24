@@ -4,7 +4,7 @@ A mod for MiA: BSFD that allows you to move more freely.
 
 ## Features
 
-- **Infinite jumping.** Also made jumps much faster and farther up.
+- **Infinite jumping.** Hold jump to infinitely move upwards. You can also jump in mid-air. Do not quickly tap jump though, as the camera won't be able to keep up.
 - **No fall damage.**
 - **No stamina decrease.** Doing actions will not consume stamina.
 - **No natural hunger decrease.** Only tested for when you go hungry over time. Other actions like moving levels still consume hunger.
@@ -43,6 +43,9 @@ Special thanks to:
 ## Changelog
 
 ```
+1.0.1
+- Bugfix: set the adding of gameplay tags to only once, instead of on every player spawn.
+
 1.0.0
 - Initial release of complete primary features
 ```
