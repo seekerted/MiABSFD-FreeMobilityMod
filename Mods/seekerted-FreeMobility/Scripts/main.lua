@@ -4,18 +4,94 @@ Utils.Log("Starting Free Mobility Mod by Ted the Seeker")
 Utils.Log(string.format("Version %s", Utils.ModVer))
 Utils.Log(_VERSION)
 
--- Right now the jump mobility is to just have a very high leap with no limits. However this is a bit inconvenient.
--- TODO: Turn into infinite jump instead.
+-- Given a GameplayTagContainer, add new GameplayTag by manually appending to FGameplayTagContainer.GameplayTags first,
+-- and then to FGameplayTagContainer.ParentTags (if able).
+local function AddOnGameplayTagContainer(GameplayTagContainer, GameplayTag)
+	if not GameplayTagContainer:IsValid() then
+		Utils.Log("GameplayTagContainer is not valid")
+		return
+	else
+		Utils.Log("Adding new tag \"%s\" to %s", GameplayTag, GameplayTagContainer:GetFullName())
+	end
+
+	local Tags = GameplayTagContainer.GameplayTags
+	if not Tags:IsValid() then
+		Utils.Log("No valid GameplayTags")
+		return
+	end
+
+	local TagsLength = Tags:GetArrayNum()
+
+	Utils.Log("Count: %d, max: %d", TagsLength, Tags:GetArrayMax())
+
+	if TagsLength + 1 > Tags:GetArrayMax() then
+		Utils.Log("Unable to add any more GameplayTags")
+		return
+	end
+
+	Tags[TagsLength + 2].TagName = FName("")
+	Tags[TagsLength + 1].TagName = FName(GameplayTag)
+	Utils.Log("Added \"%s\" to GameplayTags", GameplayTag)
+
+	if not string.find(GameplayTag, "%.") then
+		Utils.Log("No need to add parent tags for \"%s\"", GameplayTag)
+	end
+
+	local ParentTags = GameplayTagContainer.ParentTags
+	if not ParentTags:IsValid() then
+		Utils.Log("No valid ParentTags", GameplayTagContainer:GetFullName())
+		return
+	else
+		Utils.Log("Adding parent tags")
+	end
+
+	local ParentTagsLength = ParentTags:GetArrayNum()
+
+	Utils.Log("Count: %d, max: %d", ParentTagsLength, ParentTags:GetArrayMax())
+
+	if ParentTagsLength + 1 > ParentTags:GetArrayMax() then
+		Utils.Log("Unable to add any more ParentTags")
+		return
+	end
+
+	-- Guess the parent tag by removing the last token from GameplayTag delimited by .
+	local GameplayTagParent = GameplayTag:gsub(".[^.]*$", "")
+
+	ParentTags[ParentTagsLength + 2].TagName = FName("")
+	ParentTags[ParentTagsLength + 1].TagName = FName(GameplayTagParent)
+	Utils.Log("Added \"%s\" to ParentTags", GameplayTagParent)
+end
+
+-- Player's states prevent infinite jumping by blocking GA_Player_JumpStart_C from starting when the player currently
+-- has the abilities of GA_Player_JumpStart_C or GA_Player_JumpLoop_C. This adds "State.Jumping.Start" to their list of
+-- tags to exclude from the block, allowing it to start.
+local function MakeJumpsInfinite(BP_Player_C)
+	local GA_Player_JumpStart_C = StaticFindObject("/Game/MadeInAbyss/Core/Abilities/GA_Player_JumpStart.Default__GA_Player_JumpStart_C")
+	if not GA_Player_JumpStart_C:IsValid() then
+		Utils.Log("GA_Player_JumpStart_C is not found.")
+		return
+	end
+
+	AddOnGameplayTagContainer(GA_Player_JumpStart_C.ExcludeBlockAbilitiesWithTag, "State.Jumping.Start")
+
+	local GA_Player_JumpLoop_C = StaticFindObject("/Game/MadeInAbyss/Core/Abilities/GA_Player_JumpLoop.Default__GA_Player_JumpLoop_C")
+	if not GA_Player_JumpLoop_C:IsValid() then
+		Utils.Log("GA_Player_JumpLoop_C is not found.")
+		return
+	end
+
+	AddOnGameplayTagContainer(GA_Player_JumpLoop_C.ExcludeBlockAbilitiesWithTag, "State.Jumping.Start")
+
+	BP_Player_C.JumpMaxCount = 1337
+	BP_Player_C.JumpMaxHoldTime = 100
+
+	Utils.Log("Made jumps infinite.")
+end
+
 local function MakeJumpsFaster(MIACharacterMovementComponent)
 	MIACharacterMovementComponent.JumpZVelocity = 1200
 
-	Utils.Log("Jump velocity made faster.")
-end
-
-local function MakeJumpsLimitless(BP_Player_C)
-	BP_Player_C.JumpMaxHoldTime = 1000
-
-	Utils.Log("Jump height made limitless.")
+	Utils.Log("Made jumps faster.")
 end
 
 local function DisableFallDamage(BP_Player_C)
@@ -62,7 +138,7 @@ local function BP_Player_C__OnLoaded_3EA1(Param_BP_Player_C)
 	local BP_Player_C = Param_BP_Player_C:get()
 
 	DisableFallDamage(BP_Player_C)
-	MakeJumpsLimitless(BP_Player_C)
+	MakeJumpsInfinite(BP_Player_C)
 
 	local MIACharacterMovementComponent = BP_Player_C.CharacterMovement
 	if MIACharacterMovementComponent:IsValid() then
