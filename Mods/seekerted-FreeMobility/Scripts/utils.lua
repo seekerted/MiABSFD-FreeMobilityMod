@@ -4,10 +4,10 @@ local RegisteredHooks = {}
 
 Utils.ModName = "FreeMobility"
 Utils.ModAuthor = "seekerted"
-Utils.ModVer = "0.1.1"
+Utils.ModVer = "0.1.2"
 
-function Utils.Log(Msg)
-	print(string.format("[%s-%s] %s\n", Utils.ModAuthor, Utils.ModName, Msg))
+function Utils.Log(Format, ...)
+	print(string.format("[%s-%s] %s\n", Utils.ModAuthor, Utils.ModName, string.format(Format, ...)))
 end
 
 function Utils.RegisterHookOnce(FunctionName, Function)
