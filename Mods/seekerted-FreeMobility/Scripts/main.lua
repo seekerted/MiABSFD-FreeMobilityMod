@@ -1,8 +1,6 @@
 local Utils = require("utils")
 
-Utils.Log("Starting Free Mobility Mod by Ted the Seeker")
-Utils.Log(string.format("Version %s", Utils.ModVer))
-Utils.Log(_VERSION)
+Utils.Init("seekerted", "FreeMobility", "1.0.1")
 
 -- Given a GameplayTagContainer, add new GameplayTag by manually appending to FGameplayTagContainer.GameplayTags first,
 -- and then to FGameplayTagContainer.ParentTags (if able).
