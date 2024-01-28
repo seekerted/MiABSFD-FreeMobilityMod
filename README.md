@@ -12,6 +12,10 @@ A mod for MiA: BSFD that allows you to move more freely.
 
 ## Installation
 
+Get and install this mod via Nexus Mods and Vortex (guide also in the link): https://www.nexusmods.com/madeinabyssbinarystarfallingintodarkness/mods/7
+
+## Manual/Advanced Installation
+
 If you've already installed UE4SS previously (maybe from another one of my mods?) you can skip to the mod part.
 
 ### Install UE4SS
@@ -51,6 +55,9 @@ Special thanks to:
 ## Changelog
 
 ```
+1.0.2
+- Updated utils.lua
+
 1.0.1
 - Bugfix: set the adding of gameplay tags to only once, instead of on every player spawn.
 
