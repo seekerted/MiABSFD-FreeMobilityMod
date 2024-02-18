@@ -1,6 +1,6 @@
 local Utils = require("utils")
 
-Utils.Init("seekerted", "FreeMobility", "1.0.1")
+Utils.Init("seekerted", "FreeMobility", "1.0.3")
 
 -- Given a GameplayTagContainer, add new GameplayTag by manually appending to FGameplayTagContainer.GameplayTags first,
 -- and then to FGameplayTagContainer.ParentTags (if able).
@@ -135,9 +135,9 @@ local function DisableCurseEffect(MIACharaStatusSetting)
 	Utils.Log("Disabled the Abyss Curse.")
 end
 
--- Get the right objects to manipulate upon Player load.
-local function BP_Player_C__OnLoaded_3EA1(Param_BP_Player_C)
-	local BP_Player_C = Param_BP_Player_C:get()
+local function ApplyPlayerChanges()
+	local BP_Player_C = FindFirstOf("BP_Player_C")
+	if not BP_Player_C:IsValid() then return end
 
 	DisableFallDamage(BP_Player_C)
 	MakeJumpsInfinite(BP_Player_C)
@@ -148,42 +148,25 @@ local function BP_Player_C__OnLoaded_3EA1(Param_BP_Player_C)
 	end
 end
 
--- Hook into BP_Player_C (hot-reload friendly)
-local function HookBP_Player_C(New_BP_Player_C)
-	if New_BP_Player_C:IsValid() then
-		Utils.RegisterHookOnce("/Game/MadeInAbyss/Core/Characters/Player/BP_Player.BP_Player_C:OnLoaded_3EA1D4484C94D6D6E39F31AD554C4A7A",
-				BP_Player_C__OnLoaded_3EA1)
-	else
-		NotifyOnNewObject("/Script/MadeInAbyss.MIAPlayerBase", function(New_MIAPlayerBase)
-			if New_MIAPlayerBase:IsValid() and "PersistentLevel" == New_MIAPlayerBase:GetOuter():GetFName():ToString() then
-				HookBP_Player_C(New_MIAPlayerBase)
-			end
-		end)
+ExecuteInGameThread(function()
+	-- Apply the changes as soon as the game thread starts (because it can be applied this early)
+
+	local MIACharaStatusSetting = FindObject("MIACharaStatusSetting", "BP_CharaStatusSetting")
+
+	if MIACharaStatusSetting:IsValid() then
+		DisableCurseEffect(MIACharaStatusSetting)
+		DisableHungerDecrease(MIACharaStatusSetting)
 	end
-end
-HookBP_Player_C(FindObject("BP_Player_C", "PersistentLevel"))
 
--- Hook into BP_MIAGameInstance_C instance (hot-reload friendly)
-local function HookMIAGameInstance(New_MIAGameInstance)
-	if New_MIAGameInstance:IsValid() then
-		-- MIAGameInstance has been found
+	local MIAPlayerStaminaParamSet = FindObject("MIAPlayerStaminaParamSet", "StaminaParam_Player")
 
-		local MIACharaStatusSetting = FindObject("MIACharaStatusSetting", "BP_CharaStatusSetting")
-
-		if MIACharaStatusSetting:IsValid() then
-			DisableCurseEffect(MIACharaStatusSetting)
-			DisableHungerDecrease(MIACharaStatusSetting)
-		end
-
-		local MIAPlayerStaminaParamSet = FindObject("MIAPlayerStaminaParamSet", "StaminaParam_Player")
-
-		if MIAPlayerStaminaParamSet:IsValid() then
-			DisableStaminaDecrease(MIAPlayerStaminaParamSet)
-		end
-
-		UnblockJumpStart()
-	else
-		NotifyOnNewObject("/Script/MadeInAbyss.MIAGameInstance", HookMIAGameInstance)
+	if MIAPlayerStaminaParamSet:IsValid() then
+		DisableStaminaDecrease(MIAPlayerStaminaParamSet)
 	end
-end
-HookMIAGameInstance(FindFirstOf("MIAGameInstance"))
+
+	UnblockJumpStart()
+
+	-- Things that has to be changed on the player itself can be applied when they start jumping
+	Utils.RegisterSingleUseHook("/Game/MadeInAbyss/Core/Abilities/GA_Player_JumpStart.GA_Player_JumpStart_C:ExecuteUbergraph_GA_Player_JumpStart",
+			ApplyPlayerChanges)
+end)
