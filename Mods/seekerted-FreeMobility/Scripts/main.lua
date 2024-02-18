@@ -1,6 +1,8 @@
 local Utils = require("utils")
 
-Utils.Init("seekerted", "FreeMobility", "1.0.3")
+Utils.Init("seekerted", "FreeMobility", "1.0.4")
+
+local AppliedPlayerChanges = false
 
 -- Given a GameplayTagContainer, add new GameplayTag by manually appending to FGameplayTagContainer.GameplayTags first,
 -- and then to FGameplayTagContainer.ParentTags (if able).
@@ -136,6 +138,9 @@ local function DisableCurseEffect(MIACharaStatusSetting)
 end
 
 local function ApplyPlayerChanges()
+	-- If the changes have already been applied, just skip
+	if AppliedPlayerChanges then return end
+
 	local BP_Player_C = FindFirstOf("BP_Player_C")
 	if not BP_Player_C:IsValid() then return end
 
@@ -146,7 +151,14 @@ local function ApplyPlayerChanges()
 	if MIACharacterMovementComponent:IsValid() then
 		MakeJumpsFaster(MIACharacterMovementComponent)
 	end
+
+	AppliedPlayerChanges = true
 end
+
+RegisterInitGameStatePostHook(function(Param_AGameStateBase)
+	-- The player respawns and resets everything, so re-apply it again
+	AppliedPlayerChanges = false
+end)
 
 ExecuteInGameThread(function()
 	-- Apply the changes as soon as the game thread starts (because it can be applied this early)
@@ -167,6 +179,6 @@ ExecuteInGameThread(function()
 	UnblockJumpStart()
 
 	-- Things that has to be changed on the player itself can be applied when they start jumping
-	Utils.RegisterSingleUseHook("/Game/MadeInAbyss/Core/Abilities/GA_Player_JumpStart.GA_Player_JumpStart_C:ExecuteUbergraph_GA_Player_JumpStart",
+	Utils.RegisterHookOnce("/Game/MadeInAbyss/Core/Abilities/GA_Player_JumpStart.GA_Player_JumpStart_C:ExecuteUbergraph_GA_Player_JumpStart",
 			ApplyPlayerChanges)
 end)
