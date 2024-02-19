@@ -1,4 +1,4 @@
--- Ted the Seeker's utils.lua 2024-02-18
+-- Ted the Seeker's utils.lua 2024-02-19
 local Utils = {}
 
 local RegisteredHooks = {}
@@ -27,8 +27,10 @@ end
 -- Wrapper to UE4SS' RegisterHook except it prevents creating any more duplicate hooks according to function name.
 function Utils.RegisterHookOnce(FunctionName, Function)
 	if not RegisteredHooks[FunctionName] then
-		RegisterHook(FunctionName, Function)
+		local PreID, PostID = RegisterHook(FunctionName, Function)
 		RegisteredHooks[FunctionName] = true
+
+		Utils.Log("Hooked (once) onto %s (%d, %d)", FunctionName, PreID, PostID)
 	end
 end
 
